@@ -24,7 +24,7 @@
 package main
 
 import (
-		"./cmd"
+		"github.com/dzch/zkcli/cmd"
 		"fmt"
 		"flag"
 		"os"
