@@ -57,7 +57,6 @@ func (get *getAction) exec(zc *ZkCmd) error {
 }
 
 func (get *getAction) rGet(zc *ZkCmd, node string) error {
-	fmt.Println(node)
 	children, _, err := zc.conn.Children(node)
 	if err != nil {
 		return err
