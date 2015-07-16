@@ -25,6 +25,7 @@ package cmd
 
 import (
 		"fmt"
+		"sort"
 	   )
 
 type getAction struct {}
@@ -41,6 +42,9 @@ func (get *getAction) exec(zc *ZkCmd) error {
 		}
 	}
     path = fmt.Sprintf("%s%s", zc.opt.Chroot, path)
+	if zc.opt.Recursive {
+		return get.rGet(zc, path)
+	}
     val, _, err := zc.conn.Get(path)
 	if err != nil {
 		return err
@@ -50,4 +54,37 @@ func (get *getAction) exec(zc *ZkCmd) error {
 		return err
 	}
 	return nil
+}
+
+func (get *getAction) rGet(zc *ZkCmd, node string) error {
+	fmt.Println(node)
+	children, _, err := zc.conn.Children(node)
+	if err != nil {
+		return err
+	}
+    cnode := node
+	if node == "/" {
+		cnode = ""
+	} else if cnode[len(node)-1] == '/' {
+		cnode = cnode[0:len(node)-1]
+	}
+	sort.Sort(sort.StringSlice(children))
+	for _, child := range children {
+		if child[0] == '/' {
+			if len(child) == 1 {
+				child = ""
+			} else {
+				child = child[1:]
+			}
+		}
+		err = get.rGet(zc, fmt.Sprintf("%s/%s", cnode, child))
+		if err != nil {
+			return err
+		}
+	}
+	val, _, err := zc.conn.Get(node)
+	if err != nil {
+		return err
+	}
+	return zc.output(fmt.Sprintf("%s: %s", node, string(val)))
 }
